@@ -1,4 +1,10 @@
-#include"input.h"
+#include <fstream>
+#include <exception>
+#include <iostream>
+#include <cmath>
+#include <sstream>
+
+#include"iohandler.h"
 
 double f(int k, int n, int i, int j) {
     switch(k) {
@@ -22,7 +28,7 @@ double f(int k, int n, int i, int j) {
             return 1 / static_cast<double>(i + j - 1);
         default:
             std::cerr << "k is invalid" << std::endl;
-            exit(1);
+            throw std::runtime_error("k is invalid");
     }
 }
 
@@ -35,7 +41,7 @@ void fill_with_file(double  *a, int n, const std::string& filename) {
     }
     if (!input) {
         std::cerr << "Unable to open or read the file" << std::endl;
-        exit(1);
+        throw std::runtime_error("unable to open or read the file\"");
     }
 }
 
@@ -68,4 +74,14 @@ double* process_input(int argc, char **argv, int& n, int& m, double& eps, int& k
     }
     fill_matrix(a, n, k, filename);
     return a;
+}
+
+void output(int l, int n, int m, double *matrix) {
+    std::cout << '\n';
+    for (int i = 0; i < l && i < m; ++i) {
+        for (int j = 0; j < n && j < m; ++j) {
+            printf("%10.3e", matrix[i * n + j]);
+        }
+        std::cout << '\n';
+    }
 }
