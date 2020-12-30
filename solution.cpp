@@ -3,10 +3,11 @@
 
 
 
-int S(double *a, double lambda) {
+/*int S(double *a, double lambda) {
     diagonal(a);
     return 0;
-}
+}*/
+/*
 
 void solution(double *a, int n, double *x, double eps) {
     double a_inf = 0;
@@ -29,4 +30,4 @@ void solution(double *a, int n, double *x, double eps) {
         }
     }
     x[k] = (ai + bi) / 2;
-}
+}*/
