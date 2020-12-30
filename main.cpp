@@ -20,9 +20,10 @@ int main(int argc, char **argv) {
     auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start);
     std::cout << "milliseconds: " << time_taken.count() << std::endl;
     fill_matrix(a, n, k, filename);
+    std::cout << "eigenvalues: ";
     output(1, n, m, x);
-    std::cout << "trace accuracy = " << std::scientific << FindTraceAccuracy(a, x, n) << std::endl;
-    std::cout << "strange accuracy = " << std::scientific << FindStrangeAccuracy(a, x, n) << std::endl;
+    std::cout << "trace accuracy = " << std::scientific << accuracy::trace_accuracy(a, x, n) << std::endl;
+    std::cout << "strange accuracy = " << std::scientific << accuracy::strange_accuracy(a, x, n) << std::endl;
     delete[] x;
     delete[] a;
     return 0;

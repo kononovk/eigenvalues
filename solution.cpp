@@ -1,6 +1,7 @@
 #include "solution.h"
 #include "tridiagonal.h"
 
+static constexpr double EPS = 1e-20;
 
 int number_of_sign_changes(const double *a, int n, double lambda) {
     int res = 0;
@@ -8,10 +9,13 @@ int number_of_sign_changes(const double *a, int n, double lambda) {
     for (int i = 1; i < n; ++i) {
         double ui = a[(i - 1) * n + i] / li;
         double lambda_i = a[i * n + i - 1];
-        if (li < 0) {
+        if (li < EPS) {
             res++;
         }
         li = a[i * n + i] - lambda_i * ui - lambda;
+    }
+    if (li < EPS) {
+        res++;
     }
     return res;
 }
@@ -27,16 +31,16 @@ void solution(double *a, int n, double *x, double eps) {
         }
         a_inf = a_inf > sum ? a_inf : sum;
     }
-
-    int k = 0;
-    double ai = -a_inf, bi = a_inf;
-    while (bi - ai > eps) {
-        double ci_plus_1 = (ai + bi) / 2;
-        if (number_of_sign_changes(a, n, ci_plus_1) < k + 1) {
-            ai = ci_plus_1;
-        } else {
-            bi = ci_plus_1;
+    for (int k = 0; k < n; ++k) {
+        double ai = -a_inf, bi = a_inf;
+        while (bi - ai > eps) {
+            double ci_plus_1 = (ai + bi) / 2;
+            if (number_of_sign_changes(a, n, ci_plus_1) < k + 1) {
+                ai = ci_plus_1;
+            } else {
+                bi = ci_plus_1;
+            }
         }
+        x[k] = (ai + bi) / 2;
     }
-    x[k] = (ai + bi) / 2;
 }

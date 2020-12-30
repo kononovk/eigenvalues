@@ -2,12 +2,12 @@
 
 #include <cstdint>
 #include <cmath>
-#include <iostream>
-#include <iomanip>
-
-#include <vector>
 
 namespace diag {
+
+/// details of implementation
+namespace details {
+static const double EPSILON = 1e-10;
 
 class RotateMatrix {
 public:
@@ -19,70 +19,86 @@ public:
     }
 
 private:
-    friend void iteration(double *M,
-                          std::size_t size,
-                          const RotateMatrix &Q);
+    friend void matrix_rotate(double *M,
+                              std::size_t size,
+                              const RotateMatrix &Q);
+    friend void rotate_matrix_mul_matrix(double *M,
+                                         std::size_t size,
+                                         const RotateMatrix &Q);
     std::size_t i, j;
     double x, y;
     double sqrt, cos, sin;
 };
 
-inline void print(double *m, int n) {
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            std::cerr << std::fixed << std::setw(5) << std::setprecision(1) << m[i * n + j] + 1e-12 << ' ';
-        }
-        std::cerr << std::endl;
-    }
-    std::cerr << "=========================================" << std::endl;
-}
-
 /**
- * @param: M - matrix to multiply
+ * @param: M - symmetrical matrix to multiply,
+ *         size - size of M
+ *         Q - rotate matrix to multiply
  */
 inline void rotate_matrix_mul_matrix(double *M,
                                      std::size_t size,
-                                     double x, double y,
-                                     int i, int j) {
-    double sqrt_tmp = std::sqrt(x * x + y * y),
-            cos = x / sqrt_tmp,
-            sin = -y / sqrt_tmp;
+                                     const RotateMatrix &Q) {
     for (std::size_t k = 0; k < size; ++k) {
-        double tmp1 = M[i * size + k];
-        double tmp2 = M[j * size + k];
-        M[i * size + k] = tmp1 * cos - tmp2 * sin;
-        M[j * size + k] = tmp1 * sin + tmp2 * cos;
+        double tmp1 = M[Q.i * size + k];
+        double tmp2 = M[Q.j * size + k];
+        M[Q.i * size + k] = tmp1 * Q.cos - tmp2 * Q.sin;
+        M[Q.j * size + k] = tmp1 * Q.sin + tmp2 * Q.cos;
     }
 }
 
-/// TODO: change naming
-inline void iteration(double *M, std::size_t size,
-                      const RotateMatrix &Q) {
-    rotate_matrix_mul_matrix(M, size, Q.x, Q.y, Q.i, Q.j);
+/**
+ * Find similar matrix for symmetrical matrix:
+ *      M = Q * M * Q^T, rotates basis with Q
+ * @param: M - symmetrical matrix to multiply,
+ *         size - size of M
+ *         Q - rotate matrix to multiply
+ */
+inline void matrix_rotate(double *M, std::size_t size,
+                          const RotateMatrix &Q) {
+    rotate_matrix_mul_matrix(M, size, Q);
+    /// without using symmetrical property
+    /*
     for (std::size_t k = 0; k < size; ++k) {
-        double tmp1 = M[k * size + Q.i],
-                tmp2 = M[k * size + Q.j];
-        M[k * size + Q.i] = tmp1 * Q.cos - tmp2 * Q.sin;
-        M[k * size + Q.j] = tmp1 * Q.sin + tmp2 * Q.cos;
+            double tmp1 = M[k * size + Q.i],
+                    tmp2 = M[k * size + Q.j];
+            M[k * size + Q.i] = tmp1 * Q.cos - tmp2 * Q.sin;
+            M[k * size + Q.j] = tmp1 * Q.sin + tmp2 * Q.cos;
+        }
+    */
+    double Mii = M[Q.i * size + Q.i];
+    double Mij = M[Q.i * size + Q.j];
+    double Mji = M[Q.j * size + Q.i];
+    double Mjj = M[Q.j * size + Q.j];
+
+    M[Q.i * size + Q.i] = Mii * Q.cos - Mij * Q.sin;
+    M[Q.i * size + Q.j] = Mii * Q.sin + Mij * Q.cos;
+    M[Q.j * size + Q.i] = Mji * Q.cos - Mjj * Q.sin;
+    M[Q.j * size + Q.j] = Mji * Q.sin + Mjj * Q.cos;
+    for (std::size_t k = 0; k < size; ++k) {
+        M[k * size + Q.i] = M[Q.i * size + k];
+        M[k * size + Q.j] = M[Q.j * size + k];
     }
 }
+}
 
-inline void tridiagonalize(double *a, std::size_t n) {
-    double x, y;
-    for (std::size_t k = 0; k < n - 2; ++k) {
-        for (std::size_t j = k + 2; j < n; ++j) {
+/**
+ * Symmetrical matrix reduction to tridiagonalize form using rotations.
+ * @param: M - symmetrical matrix to tridiagonalize,
+ *         size - size of matrix
+ */
+inline void tridiagonalize(double *M, std::size_t size) {
+    for (std::size_t k = 0; k < size - 2; ++k) {
+        for (std::size_t j = k + 2; j < size; ++j) {
             double sum {};
             for (std::size_t counter = k + 1; counter < j; ++counter) {
-                sum += a[counter * n + k] * a[counter * n + k];
+                sum += M[counter * size + k] * M[counter * size + k];
             }
-            x = std::sqrt(sum);
-            y = a[j * n + k];
-            if (x != 0 || y != 0) {
-                iteration(a, n, RotateMatrix {k + 1, j, x, y});
+            double x = std::sqrt(sum);
+            double y = M[j * size + k];
+            if (std::fabs(x) > details::EPSILON || std::fabs(y) > details::EPSILON) {
+                details::matrix_rotate(M, size, details::RotateMatrix {k + 1, j, x, y});
             }
         }
     }
-    print(a, n);
 }
-
 }
