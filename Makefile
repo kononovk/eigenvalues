@@ -1,18 +1,27 @@
-.PHONY: test
-build: main.cpp solution.cpp iohandler.cpp
-	g++ main.cpp solution.cpp iohandler.cpp -O3 -Wall -Werror -o eigenvalues
+TARGET = eigenvalues
+OBJECTS = main.o iohandler.o solution.o
+CC = g++
+CFLAGS = -std=c++14 -c -Werror -Wall -O3
 
-test1: eigenvalues
-	./eigenvalues 300 10 2e-12 1
+.DEFAULT_GOAL := $(TARGET)
 
-test2: eigenvalues
-	./eigenvalues 300 10 2e-12 2
-
-test3: eigenvalues
-	./eigenvalues 300 10 2e-12 3
-
-
-test4: eigenvalues
-	./eigenvalues 300 10 2e-12 4
-
+$(TARGET): $(OBJECTS)
+	$(CC) $(OBJECTS) -o $(TARGET)
+  
+  
+main.o: main.cpp iohandler.h solution.h accuracy.h
+	$(CC) $(CFLAGS) main.cpp
+  
+  
+iohandler.o: iohandler.cpp iohandler.h
+	$(CC) $(CFLAGS) iohandler.cpp
+  
+  
+solution.o: solution.cpp solution.h tridiagonal.h
+	$(CC) $(CFLAGS) solution.cpp
+  
+  
+.PHONY: clean
+clean:
+	rm -f $(OBJECTS) $(TARGET)
 

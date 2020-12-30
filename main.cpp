@@ -1,4 +1,3 @@
-
 #include "iohandler.h"
 #include "solution.h"
 #include "accuracy.h"
