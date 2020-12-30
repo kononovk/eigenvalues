@@ -8,7 +8,6 @@ CFLAGS = -std=c++14 -c -Werror -Wall -O3
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $(TARGET)
   
-  
 main.o: main.cpp iohandler.h solution.h accuracy.h
 	$(CC) $(CFLAGS) main.cpp
   
