@@ -5,6 +5,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <vector>
+
 namespace diag {
 
 class RotateMatrix {
@@ -14,10 +16,6 @@ public:
         sqrt = std::sqrt(x * x + y * y);
         cos = x / sqrt;
         sin = -y / sqrt;
-    }
-
-    void print() const {
-        std::cout << i << ' ' << j << ' ' << x << ' ' << y << std::endl;
     }
 
 private:
@@ -32,7 +30,7 @@ private:
 inline void print(double *m, int n) {
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            std::cerr << std::fixed << std::setw(5) << std::setprecision(1) << m[i * n + j] << ' ';
+            std::cerr << std::fixed << std::setw(5) << std::setprecision(1) << m[i * n + j] + 1e-12 << ' ';
         }
         std::cerr << std::endl;
     }
@@ -61,52 +59,30 @@ inline void rotate_matrix_mul_matrix(double *M,
 inline void iteration(double *M, std::size_t size,
                       const RotateMatrix &Q) {
     rotate_matrix_mul_matrix(M, size, Q.x, Q.y, Q.i, Q.j);
-
-    /*auto Mii = M[Q.i * size + Q.i], Mij = M[Q.i * size + Q.j],
-            Mjj = M[Q.j * size + Q.j], Mji = M[Q.j * size + Q.i];
-        2.2 6 7.4 8.8
-        0.4 2 1.8 1.6
-        3 7 11 12
-        4 8 12 16
-
-         3/5 -4/5
-         4/5 3/5
-                  1
-                     1
-    */
-    // print(M, size);
     for (std::size_t k = 0; k < size; ++k) {
         double tmp1 = M[k * size + Q.i],
                 tmp2 = M[k * size + Q.j];
         M[k * size + Q.i] = tmp1 * Q.cos - tmp2 * Q.sin;
         M[k * size + Q.j] = tmp1 * Q.sin + tmp2 * Q.cos;
     }
-    // print(M, size);
-}
-
-inline void test() {
-    double a[] {1, 2, 3, 4,
-                2, 6, 7, 8,
-                3, 7, 11, 12,
-                4, 8, 12, 16};
-    // rotate_matrix_mul_matrix(a, 4, 3, 4, 0, 1);
-    iteration(a, 4, RotateMatrix {0, 1, 3, 4});
-    // print(a, 4);
 }
 
 inline void tridiagonalize(double *a, std::size_t n) {
+    double x, y;
     for (std::size_t k = 0; k < n - 2; ++k) {
-        // T12 T13 T14 ... T15
         for (std::size_t j = k + 2; j < n; ++j) {
             double sum {};
             for (std::size_t counter = k + 1; counter < j; ++counter) {
                 sum += a[counter * n + k] * a[counter * n + k];
             }
-            double x = {sqrt(sum)};
-            double y = {a[j * n + k]};
-            iteration(a, n, RotateMatrix {k + 1, j, x, y});
+            x = std::sqrt(sum);
+            y = a[j * n + k];
+            if (x != 0 || y != 0) {
+                iteration(a, n, RotateMatrix {k + 1, j, x, y});
+            }
         }
     }
+    print(a, n);
 }
 
 }
